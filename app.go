@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -80,20 +81,22 @@ var listOfPeople People = make(People, 1, 20)
 
 var reader = bufio.NewReader(os.Stdin)
 
+const SaveLocation = "data.json"
+
+var run bool = true
+
 func main() {
 
 	fmt.Println("Borç Takip v1.0 Uygulamama Hoş Geldiniz...")
 	fmt.Println("Geliştiren: Evrim Altay KOLUAÇIK")
 	fmt.Println("\t8 Şubat 2025 - SBux Boğaçayı, Konyaaltı, Antalya / TÜRKİYE")
 
-	listOfPeople[0] = NewPerson("Ferad Altılar", "+905340364488")
-	listOfPeople[0].NewTransaction(500, "Deneme", false)
+	listOfPeople = Load()
 
 	menu()
 }
 
 func menu() {
-	run := true
 	var choice int
 
 	for run {
@@ -133,7 +136,7 @@ func menu() {
 
 func listPeopleWith(key string) {
 	if len(listOfPeople) == 0 {
-		EPrint("Sisteme kayıtlı hiçkimse yok!")
+		EPrint("Sisteme kayıtlı hiç kimse yok!")
 		return
 	}
 	for index, person := range listOfPeople {
@@ -149,6 +152,10 @@ func listPeopleWith(key string) {
 }
 
 func personSelector() (*Person, bool) {
+	if len(listOfPeople) == 0 {
+		return &Person{}, false
+	}
+
 	if len(listOfPeople) == 1 {
 		return &listOfPeople[0], true
 	}
@@ -169,6 +176,10 @@ func personSelector() (*Person, bool) {
 }
 
 func personSelectorToRemove() (int, bool) {
+	if len(listOfPeople) == 0 {
+		return -1, false
+	}
+
 	if len(listOfPeople) == 1 {
 		return 0, true
 	}
@@ -189,6 +200,10 @@ func personSelectorToRemove() (int, bool) {
 }
 
 func AddDebt() {
+	if len(listOfPeople) == 0 {
+		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		return
+	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
@@ -208,9 +223,21 @@ func AddDebt() {
 	desciption := GetString("Borç Açıklaması")
 
 	foundPerson.NewTransaction(amount, desciption, true)
+	isSaved := Save(listOfPeople)
+
+	if !isSaved {
+		EPrint("Kayıt hatası!")
+		return
+	}
+
+	LPrint("++ Borç kaydı başarıyla eklendi.")
 }
 
 func AddPayment() {
+	if len(listOfPeople) == 0 {
+		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		return
+	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
@@ -230,9 +257,21 @@ func AddPayment() {
 	desciption := GetString("Ödeme Açıklaması")
 
 	foundPerson.NewTransaction(amount, desciption, false)
+	isSaved := Save(listOfPeople)
+
+	if !isSaved {
+		EPrint("Kayıt hatası!")
+		return
+	}
+
+	LPrint("++ Ödeme kaydı başarıyla eklendi.")
 }
 
 func ListPeople() {
+	if len(listOfPeople) == 0 {
+		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		return
+	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
@@ -268,11 +307,22 @@ func AddPerson() {
 	phone := GetString("Telefon")
 
 	listOfPeople.NewPerson(name, phone)
-	LPrint("Kişi başarıyla eklendi!")
+	isSaved := Save(listOfPeople)
+
+	if !isSaved {
+		EPrint("Kayıt hatası!")
+		return
+	}
+
+	LPrint("++Kişi başarıyla eklendi!")
 	Enter2Continue()
 }
 
 func EditPerson() {
+	if len(listOfPeople) == 0 {
+		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		return
+	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
@@ -295,12 +345,22 @@ func EditPerson() {
 	if phone != "" {
 		foundPerson.Phone = phone
 	}
+	isSaved := Save(listOfPeople)
 
-	LPrint("Kişi başarıyla güncellendi!")
+	if !isSaved {
+		EPrint("Kayıt hatası!")
+		return
+	}
+
+	LPrint("++ Kişi başarıyla güncellendi!")
 	Enter2Continue()
 }
 
 func RemovePerson() {
+	if len(listOfPeople) == 0 {
+		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		return
+	}
 	foundPersonIndex, somethingHasFound := personSelectorToRemove()
 
 	if !somethingHasFound {
@@ -313,13 +373,19 @@ func RemovePerson() {
 	decision := strings.ToLower(GetString("Silme İşleminden Emin Misiniz? (Evet / Hayır)"))
 
 	if decision == "e" || decision == "evet" {
-		FLPrint("'%v' başarıyla silindi...", listOfPeople[foundPersonIndex].Name)
 		listOfPeople = removePersonFromList(listOfPeople, foundPersonIndex)
+		isSaved := Save(listOfPeople)
+
+		if !isSaved {
+			EPrint("Kayıt hatası!")
+			return
+		}
+
+		FLPrint("++ '%v' başarıyla silindi...", listOfPeople[foundPersonIndex].Name)
 	} else {
 		LPrint("** İşlem iptal edildi...")
 	}
 	Enter2Continue()
-
 }
 
 func removePersonFromList(_listOfPeople People, pos int) People {
@@ -333,6 +399,10 @@ func removePersonFromList(_listOfPeople People, pos int) People {
 }
 
 func SeeReport() {
+	if len(listOfPeople) == 0 {
+		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		return
+	}
 	LPrint("1- Borç Raporu")
 	LPrint("2- İşlem Raporu")
 	choice := GetChoice("Rapor Tipi Seçin")
@@ -416,4 +486,45 @@ func Enter2Continue() {
 	LPrint()
 	LPrint("Devam etmek için enter tuşuna basın...")
 	fmt.Scanln()
+}
+
+func Save(p People) bool {
+	if len(p) == 0 {
+		EPrint("Kayıt edilecek hiçbir şey yok!")
+		return false
+	}
+
+	jsonContent, err := json.Marshal(p)
+
+	if err != nil {
+		EPrint("Değişiklikler diske yazılamadı! JSON Hatası: " + err.Error())
+		return false
+	}
+
+	err = os.WriteFile(SaveLocation, jsonContent, 0644)
+
+	if err != nil {
+		EPrint("Değişiklikler diske yazılamadı! Kayıt Hatası: " + err.Error())
+		return false
+	}
+
+	return true
+}
+
+func Load() People {
+	jsonContent, err := os.ReadFile(SaveLocation)
+
+	if err != nil {
+		EPrint("Kayıt dosyası bulunamadı. Sıfırdan başlanacak")
+		return People{}
+	}
+	var _listOfPeople People
+	err = json.Unmarshal(jsonContent, &_listOfPeople)
+
+	if err != nil {
+		EPrint("Kayıt dosyasında bir hata var. Sistem çalışmayı sonlandıracak.")
+		panic("Lütfen '" + SaveLocation + "' dosyasını silip programı yeniden çalıştırın.")
+	}
+
+	return _listOfPeople
 }
