@@ -69,7 +69,7 @@ func (tnxs Transactions) ListTransactions() {
 	}
 }
 
-var listOfPeople People = make(People, 2, 20)
+var listOfPeople People = make(People, 1, 20)
 
 var reader = bufio.NewReader(os.Stdin)
 
@@ -141,14 +141,18 @@ func listPeopleWith(key string) {
 }
 
 func personSelector() (*Person, bool) {
+	if len(listOfPeople) == 1 {
+		return &listOfPeople[0], true
+	}
+
 	listPeopleWith("balance")
 	personIndex := GetChoice("Kişi Seçin")
 	somethingHasFound := false
 	var foundPerson *Person
-	for index, person := range listOfPeople {
+	for index := range listOfPeople {
 		if index == personIndex {
 			somethingHasFound = true
-			foundPerson = &person
+			foundPerson = &listOfPeople[index]
 			break
 		}
 	}
@@ -157,13 +161,14 @@ func personSelector() (*Person, bool) {
 }
 
 func AddDebt() {
-	listPeopleWith("balance")
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
 		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
 		return
 	}
+
+	FLPrint("\n##\"%v\" Kişisine Borç Kaydı Ekle", foundPerson.name)
 
 	amount, err := GetFloat("Borç Tutarı")
 
@@ -178,13 +183,14 @@ func AddDebt() {
 }
 
 func AddPayment() {
-	listPeopleWith("balance")
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
 		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
 		return
 	}
+
+	FLPrint("\n##\"%v\" Kişisine Ödeme Kaydı Ekle", foundPerson.name)
 
 	amount, err := GetFloat("Ödeme Tutarı")
 
@@ -195,11 +201,10 @@ func AddPayment() {
 
 	desciption := GetString("Ödeme Açıklaması")
 
-	foundPerson.NewTransaction(amount, desciption, true)
+	foundPerson.NewTransaction(amount, desciption, false)
 }
 
 func ListPeople() {
-	listPeopleWith("balance")
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
@@ -237,13 +242,14 @@ func AddPerson() {
 }
 
 func EditPerson() {
-	listPeopleWith("balance")
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
 		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
 		return
 	}
+
+	FLPrint("\n##\"%v\" Kişisini Düzenle", foundPerson.name)
 
 	name := GetString("Yeni İsim")
 
