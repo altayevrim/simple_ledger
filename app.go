@@ -1,6 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+)
 
 type Person struct {
 	name         string
@@ -43,8 +49,8 @@ func (t Transaction) DisplayTransaction() {
 
 type People []Person
 
-func (ppl *People) NewPerson(name, phone string) *People {
-
+func (ppl *People) NewPerson(name, phone string) {
+	*ppl = append(*ppl, NewPerson(name, phone))
 }
 
 type Transactions []Transaction
@@ -64,6 +70,8 @@ func (tnxs Transactions) ListTransactions() {
 }
 
 var listOfPeople People = make(People, 2, 20)
+
+var reader = bufio.NewReader(os.Stdin)
 
 func main() {
 
@@ -132,32 +140,75 @@ func listPeopleWith(key string) {
 	}
 }
 
-func AddDebt() {
-
-}
-
-func AddPayment() {
-
-}
-
-func ListPeople() {
+func personSelector() (*Person, bool) {
 	listPeopleWith("balance")
 	personIndex := GetChoice("Kişi Seçin")
 	somethingHasFound := false
-	var foundPerson Person
+	var foundPerson *Person
 	for index, person := range listOfPeople {
 		if index == personIndex {
 			somethingHasFound = true
-			foundPerson = person
+			foundPerson = &person
 			break
 		}
 	}
 
+	return foundPerson, somethingHasFound
+}
+
+func AddDebt() {
+	listPeopleWith("balance")
+	foundPerson, somethingHasFound := personSelector()
+
 	if !somethingHasFound {
 		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
-	} else {
-		ViewPersonDetails(foundPerson)
+		return
 	}
+
+	amount, err := GetFloat("Borç Tutarı")
+
+	if err != nil {
+		EPrint(err.Error() + " İşlem iptal ediliyor.")
+		return
+	}
+
+	desciption := GetString("Borç Açıklaması")
+
+	foundPerson.NewTransaction(amount, desciption, true)
+}
+
+func AddPayment() {
+	listPeopleWith("balance")
+	foundPerson, somethingHasFound := personSelector()
+
+	if !somethingHasFound {
+		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		return
+	}
+
+	amount, err := GetFloat("Ödeme Tutarı")
+
+	if err != nil {
+		EPrint(err.Error() + " İşlem iptal ediliyor.")
+		return
+	}
+
+	desciption := GetString("Ödeme Açıklaması")
+
+	foundPerson.NewTransaction(amount, desciption, true)
+}
+
+func ListPeople() {
+	listPeopleWith("balance")
+	foundPerson, somethingHasFound := personSelector()
+
+	if !somethingHasFound {
+		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		return
+	}
+
+	ViewPersonDetails(*foundPerson)
+
 }
 
 func ViewPersonDetails(p Person) {
@@ -170,11 +221,44 @@ func ViewPersonDetails(p Person) {
 }
 
 func AddPerson() {
+	LPrint("Kişi eklemek için sırasıyla isim ve telefon numarası girin")
+	name := GetString("İsim")
 
+	if name == "" {
+		EPrint("İsim boş geçilemez, işlem iptal edildi...")
+		return
+	}
+
+	phone := GetString("Telefon")
+
+	listOfPeople.NewPerson(name, phone)
+	LPrint("Kişi başarıyla eklendi!")
+	Enter2Continue()
 }
 
 func EditPerson() {
+	listPeopleWith("balance")
+	foundPerson, somethingHasFound := personSelector()
 
+	if !somethingHasFound {
+		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		return
+	}
+
+	name := GetString("Yeni İsim")
+
+	if name == "" {
+		EPrint("İsim alanı boş geçilemez, işlem iptal edildi...")
+		return
+	}
+
+	phone := GetString("Yeni Telefon")
+
+	foundPerson.name = name
+	foundPerson.phone = phone
+
+	LPrint("Kişi başarıyla güncellendi!")
+	Enter2Continue()
 }
 
 func RemovePerson() {
@@ -193,14 +277,22 @@ func LPrint(data ...any) {
 // Error Print
 func EPrint(data any) {
 	fmt.Printf("** %v\n\n", data)
+	Enter2Continue()
 }
 
+// Format Print
 func FPrint(format string, params ...any) {
 	fmt.Printf(format, params...)
 }
 
+// Format and Line Print
 func FLPrint(format string, params ...any) {
 	fmt.Printf(format+"\n", params...)
+}
+
+// Plain Print
+func PPrint(data ...any) {
+	fmt.Print(data...)
 }
 
 func GetChoice(prompt string) (choice int) {
@@ -209,6 +301,33 @@ func GetChoice(prompt string) (choice int) {
 	}
 	fmt.Scanln(&choice)
 	return choice
+}
+
+func GetFloat(prompt string) (value float64, err error) {
+	if prompt != "" {
+		FPrint("%v: ₺", prompt)
+	}
+	fmt.Scanln(&value)
+
+	if value <= 0 {
+		return 0, errors.New(prompt + " değeri 0 veya negatif olamaz.")
+	}
+
+	return value, nil
+}
+
+func GetString(prompt string) string {
+	FPrint("%v: ", prompt)
+	value, err := reader.ReadString('\n')
+	if err != nil {
+		EPrint(prompt + " Alınamadı! Hata: " + err.Error())
+		return ""
+	}
+
+	value = strings.ReplaceAll(value, "\n", "")
+	value = strings.ReplaceAll(value, "\r", "")
+
+	return value
 }
 
 func Enter2Continue() {
