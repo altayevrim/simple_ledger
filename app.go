@@ -81,6 +81,7 @@ func main() {
 
 	fmt.Println("Borç Takip v1.0 Uygulamama Hoş Geldiniz...")
 	fmt.Println("Geliştiren: Evrim Altay KOLUAÇIK")
+	fmt.Println("\t8 Şubat 2025 - SBux Boğaçayı, Konyaaltı, Antalya / TÜRKİYE")
 
 	listOfPeople[0] = NewPerson("Ferad Altılar", "+905340364488")
 	listOfPeople[0].NewTransaction(500, "Deneme", false)
@@ -164,6 +165,26 @@ func personSelector() (*Person, bool) {
 	return foundPerson, somethingHasFound
 }
 
+func personSelectorToRemove() (int, bool) {
+	if len(listOfPeople) == 1 {
+		return 0, true
+	}
+
+	listPeopleWith("balance")
+	personIndex := GetChoice("Silmek için Kişi Seçin")
+	somethingHasFound := false
+	var foundPersonIndex int
+	for index := range listOfPeople {
+		if index == personIndex {
+			somethingHasFound = true
+			foundPersonIndex = index
+			break
+		}
+	}
+
+	return foundPersonIndex, somethingHasFound
+}
+
 func AddDebt() {
 	foundPerson, somethingHasFound := personSelector()
 
@@ -172,7 +193,7 @@ func AddDebt() {
 		return
 	}
 
-	FLPrint("\n##\"%v\" Kişisine Borç Kaydı Ekle", foundPerson.name)
+	FLPrint("\n##'%v' Kişisine Borç Kaydı Ekle", foundPerson.name)
 
 	amount, err := GetFloat("Borç Tutarı")
 
@@ -194,7 +215,7 @@ func AddPayment() {
 		return
 	}
 
-	FLPrint("\n##\"%v\" Kişisine Ödeme Kaydı Ekle", foundPerson.name)
+	FLPrint("\n##'%v' Kişisine Ödeme Kaydı Ekle", foundPerson.name)
 
 	amount, err := GetFloat("Ödeme Tutarı")
 
@@ -223,6 +244,7 @@ func ListPeople() {
 func ViewPersonDetails(p Person) {
 	LPrint()
 	FLPrint("Kişi: %v", p.name)
+	FLPrint("Telefon: %v", p.phone)
 	FLPrint("Bakiye: %.2f", p.balance)
 	LPrint("İşlemler:")
 	p.transactions.ListTransactions()
@@ -253,7 +275,7 @@ func EditPerson() {
 		return
 	}
 
-	FLPrint("\n##\"%v\" Kişisini Düzenle", foundPerson.name)
+	FLPrint("\n##'%v' Kişisini Düzenle", foundPerson.name)
 
 	name := GetString("Yeni İsim")
 
@@ -265,14 +287,44 @@ func EditPerson() {
 	phone := GetString("Yeni Telefon")
 
 	foundPerson.name = name
-	foundPerson.phone = phone
+	if phone != "" {
+		foundPerson.phone = phone
+	}
 
 	LPrint("Kişi başarıyla güncellendi!")
 	Enter2Continue()
 }
 
 func RemovePerson() {
+	foundPersonIndex, somethingHasFound := personSelectorToRemove()
 
+	if !somethingHasFound {
+		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		return
+	}
+
+	FLPrint("\n++'%v' Kişisi Silinecek!!!", listOfPeople[foundPersonIndex].name)
+
+	decision := strings.ToLower(GetString("Silme İşleminden Emin Misiniz? (Evet / Hayır)"))
+
+	if decision == "e" || decision == "evet" {
+		FLPrint("'%v' başarıyla silindi...", listOfPeople[foundPersonIndex].name)
+		listOfPeople = removePersonFromList(listOfPeople, foundPersonIndex)
+	} else {
+		LPrint("** İşlem iptal edildi...")
+	}
+	Enter2Continue()
+
+}
+
+func removePersonFromList(_listOfPeople People, pos int) People {
+	if pos == 0 {
+		return _listOfPeople[1:]
+	} else if pos == len(_listOfPeople)-1 {
+		return _listOfPeople[:len(_listOfPeople)-1]
+	}
+
+	return append(_listOfPeople[:pos], _listOfPeople[pos+1:]...)
 }
 
 func SeeReport() {
