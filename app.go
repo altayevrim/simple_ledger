@@ -64,6 +64,10 @@ func (tnxs *Transactions) NewTransaction(amount float64, description string, isD
 }
 
 func (tnxs Transactions) ListTransactions() {
+	if len(tnxs) == 0 {
+		LPrint("** Kullanıcının hiçbir işlemi yok.")
+		return
+	}
 	for _, t := range tnxs {
 		t.DisplayTransaction()
 	}
