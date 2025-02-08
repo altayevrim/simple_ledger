@@ -101,7 +101,7 @@ func menu() {
 4-) Kişi Ekle
 5-) Kişi Düzenle
 6-) Kişi Sil
-7-) Borçluları Gör
+7-) Rapor
 8-) Çıkış`)
 		choice = GetChoice("Seçin")
 
@@ -328,7 +328,21 @@ func removePersonFromList(_listOfPeople People, pos int) People {
 }
 
 func SeeReport() {
-
+	LPrint("1- Borç Raporu")
+	LPrint("2- İşlem Raporu")
+	choice := GetChoice("Rapor Tipi Seçin")
+	switch choice {
+	case 1:
+		LPrint("## Borçlara Göre Rapor")
+		listPeopleWith("balance")
+		Enter2Continue()
+	case 2:
+		LPrint("## İşlem Sayısına Göre Rapor")
+		listPeopleWith("transaction")
+		Enter2Continue()
+	default:
+		EPrint("Seçtiğiniz rapor bulunamadı...")
+	}
 }
 
 // Line Print
