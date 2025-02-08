@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 type Person struct {
@@ -37,13 +38,14 @@ type Transaction struct {
 	amount      float64
 	description string
 	isDebt      bool
+	dateTime    time.Time
 }
 
 func (t Transaction) DisplayTransaction() {
 	if t.isDebt {
-		FPrint("\tBORÇ - ₺%.2f - %v\n", t.amount, t.description)
+		FPrint("\t%v | Borç\t|\t₺%.2f | %v\n", t.dateTime.Format(time.DateTime), t.amount, t.description)
 	} else {
-		FPrint("\tALACAK - ₺%.2f - %v\n", t.amount, t.description)
+		FPrint("\t%v | Alacak\t|\t₺%.2f | %v\n", t.dateTime.Format(time.DateTime), t.amount, t.description)
 	}
 }
 
@@ -60,6 +62,7 @@ func (tnxs *Transactions) NewTransaction(amount float64, description string, isD
 		amount:      amount,
 		description: description,
 		isDebt:      isDebt,
+		dateTime:    time.Now(),
 	})
 }
 
@@ -245,9 +248,11 @@ func ViewPersonDetails(p Person) {
 	LPrint()
 	FLPrint("Kişi: %v", p.name)
 	FLPrint("Telefon: %v", p.phone)
-	FLPrint("Bakiye: %.2f", p.balance)
+	LPrint("------------------------")
 	LPrint("İşlemler:")
 	p.transactions.ListTransactions()
+	LPrint("------------------------")
+	FLPrint("Bakiye: %.2f", p.balance)
 	Enter2Continue()
 }
 
