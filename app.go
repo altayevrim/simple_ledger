@@ -10,42 +10,42 @@ import (
 )
 
 type Person struct {
-	name         string
-	phone        string
-	balance      float64
-	transactions Transactions
+	Name         string
+	Phone        string
+	Balance      float64
+	Transactions Transactions
 }
 
 func NewPerson(name, phone string) Person {
 	return Person{
-		name:         name,
-		phone:        phone,
-		balance:      0,
-		transactions: Transactions{},
+		Name:         name,
+		Phone:        phone,
+		Balance:      0,
+		Transactions: Transactions{},
 	}
 }
 
 func (p *Person) NewTransaction(amount float64, description string, isDebt bool) {
 	if isDebt {
-		p.balance -= amount
+		p.Balance -= amount
 	} else {
-		p.balance += amount
+		p.Balance += amount
 	}
-	p.transactions.NewTransaction(amount, description, isDebt)
+	p.Transactions.NewTransaction(amount, description, isDebt)
 }
 
 type Transaction struct {
-	amount      float64
-	description string
-	isDebt      bool
-	dateTime    time.Time
+	Amount      float64
+	Description string
+	IsDebt      bool
+	DateTime    time.Time
 }
 
 func (t Transaction) DisplayTransaction() {
-	if t.isDebt {
-		FPrint("\t%v | Borç\t|\t₺%.2f | %v\n", t.dateTime.Format(time.DateTime), t.amount, t.description)
+	if t.IsDebt {
+		FPrint("\t%v | Borç\t|\t₺%.2f | %v\n", t.DateTime.Format(time.DateTime), t.Amount, t.Description)
 	} else {
-		FPrint("\t%v | Alacak\t|\t₺%.2f | %v\n", t.dateTime.Format(time.DateTime), t.amount, t.description)
+		FPrint("\t%v | Alacak\t|\t₺%.2f | %v\n", t.DateTime.Format(time.DateTime), t.Amount, t.Description)
 	}
 }
 
@@ -59,10 +59,10 @@ type Transactions []Transaction
 
 func (tnxs *Transactions) NewTransaction(amount float64, description string, isDebt bool) {
 	*tnxs = append(*tnxs, Transaction{
-		amount:      amount,
-		description: description,
-		isDebt:      isDebt,
-		dateTime:    time.Now(),
+		Amount:      amount,
+		Description: description,
+		IsDebt:      isDebt,
+		DateTime:    time.Now(),
 	})
 }
 
@@ -139,11 +139,11 @@ func listPeopleWith(key string) {
 	for index, person := range listOfPeople {
 		switch key {
 		case "balance":
-			LPrint("#", index, " - ", person.name, " (₺", person.balance, ")")
+			LPrint("#", index, " - ", person.Name, " (₺", person.Balance, ")")
 		case "transaction":
-			LPrint("#", index, " - ", person.name, " (", len(person.transactions), " işlem)")
+			LPrint("#", index, " - ", person.Name, " (", len(person.Transactions), " işlem)")
 		default:
-			LPrint("#", index, " - ", person.name, " (", key, ")")
+			LPrint("#", index, " - ", person.Name, " (", key, ")")
 		}
 	}
 }
@@ -196,7 +196,7 @@ func AddDebt() {
 		return
 	}
 
-	FLPrint("\n##'%v' Kişisine Borç Kaydı Ekle", foundPerson.name)
+	FLPrint("\n##'%v' Kişisine Borç Kaydı Ekle", foundPerson.Name)
 
 	amount, err := GetFloat("Borç Tutarı")
 
@@ -218,7 +218,7 @@ func AddPayment() {
 		return
 	}
 
-	FLPrint("\n##'%v' Kişisine Ödeme Kaydı Ekle", foundPerson.name)
+	FLPrint("\n##'%v' Kişisine Ödeme Kaydı Ekle", foundPerson.Name)
 
 	amount, err := GetFloat("Ödeme Tutarı")
 
@@ -246,13 +246,13 @@ func ListPeople() {
 
 func ViewPersonDetails(p Person) {
 	LPrint()
-	FLPrint("Kişi: %v", p.name)
-	FLPrint("Telefon: %v", p.phone)
+	FLPrint("Kişi: %v", p.Name)
+	FLPrint("Telefon: %v", p.Phone)
 	LPrint("------------------------")
 	LPrint("İşlemler:")
-	p.transactions.ListTransactions()
+	p.Transactions.ListTransactions()
 	LPrint("------------------------")
-	FLPrint("Bakiye: %.2f", p.balance)
+	FLPrint("Bakiye: %.2f", p.Balance)
 	Enter2Continue()
 }
 
@@ -280,7 +280,7 @@ func EditPerson() {
 		return
 	}
 
-	FLPrint("\n##'%v' Kişisini Düzenle", foundPerson.name)
+	FLPrint("\n##'%v' Kişisini Düzenle", foundPerson.Name)
 
 	name := GetString("Yeni İsim")
 
@@ -291,9 +291,9 @@ func EditPerson() {
 
 	phone := GetString("Yeni Telefon")
 
-	foundPerson.name = name
+	foundPerson.Name = name
 	if phone != "" {
-		foundPerson.phone = phone
+		foundPerson.Phone = phone
 	}
 
 	LPrint("Kişi başarıyla güncellendi!")
@@ -308,12 +308,12 @@ func RemovePerson() {
 		return
 	}
 
-	FLPrint("\n++'%v' Kişisi Silinecek!!!", listOfPeople[foundPersonIndex].name)
+	FLPrint("\n++'%v' Kişisi Silinecek!!!", listOfPeople[foundPersonIndex].Name)
 
 	decision := strings.ToLower(GetString("Silme İşleminden Emin Misiniz? (Evet / Hayır)"))
 
 	if decision == "e" || decision == "evet" {
-		FLPrint("'%v' başarıyla silindi...", listOfPeople[foundPersonIndex].name)
+		FLPrint("'%v' başarıyla silindi...", listOfPeople[foundPersonIndex].Name)
 		listOfPeople = removePersonFromList(listOfPeople, foundPersonIndex)
 	} else {
 		LPrint("** İşlem iptal edildi...")
