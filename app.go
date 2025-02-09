@@ -44,9 +44,9 @@ type Transaction struct {
 
 func (t Transaction) DisplayTransaction() {
 	if t.IsDebt {
-		FPrint("\t%v | Borç\t|\t₺%.2f | %v\n", t.DateTime.Format(time.DateTime), t.Amount, t.Description)
+		FPrint("\t%v | Debt\t|\t₺%.2f | %v\n", t.DateTime.Format(time.DateTime), t.Amount, t.Description)
 	} else {
-		FPrint("\t%v | Alacak\t|\t₺%.2f | %v\n", t.DateTime.Format(time.DateTime), t.Amount, t.Description)
+		FPrint("\t%v | Payment\t|\t₺%.2f | %v\n", t.DateTime.Format(time.DateTime), t.Amount, t.Description)
 	}
 }
 
@@ -69,7 +69,7 @@ func (tnxs *Transactions) NewTransaction(amount float64, description string, isD
 
 func (tnxs Transactions) ListTransactions() {
 	if len(tnxs) == 0 {
-		LPrint("** Kullanıcının hiçbir işlemi yok.")
+		LPrint("** The user does not have any transaction.")
 		return
 	}
 	for _, t := range tnxs {
@@ -87,9 +87,9 @@ var run bool = true
 
 func main() {
 
-	fmt.Println("Borç Takip v1.0 Uygulamama Hoş Geldiniz...")
-	fmt.Println("Geliştiren: Evrim Altay KOLUAÇIK")
-	fmt.Println("\t8 Şubat 2025 - SBux Boğaçayı, Konyaaltı, Antalya / TÜRKİYE")
+	fmt.Println("Welcome to Simple Ledger v1.0 App...")
+	fmt.Println("Developed by Evrim Altay KOLUAÇIK")
+	fmt.Println("\t8 February 2025 - SBux Boğaçayı, Konyaaltı, Antalya / TÜRKİYE")
 
 	listOfPeople = Load()
 
@@ -101,15 +101,15 @@ func menu() {
 
 	for run {
 		fmt.Println(`
-1-) Borç Ekle
-2-) Ödeme Ekle
-3-) Kişi Listele
-4-) Kişi Ekle
-5-) Kişi Düzenle
-6-) Kişi Sil
-7-) Rapor
-8-) Çıkış`)
-		choice = GetChoice("Seçin")
+1-) Add Debt
+2-) Add Payment
+3-) List Users
+4-) Add a User
+5-) Edit a User
+6-) Remove a User
+7-) Reports
+8-) Exit`)
+		choice = GetChoice("Choose")
 
 		switch choice {
 		case 1:
@@ -128,7 +128,7 @@ func menu() {
 			SeeReport()
 		default:
 			run = false
-			fmt.Println("Görüşürüz...")
+			fmt.Println("Bye...")
 		}
 
 	}
@@ -136,7 +136,7 @@ func menu() {
 
 func listPeopleWith(key string) {
 	if len(listOfPeople) == 0 {
-		EPrint("Sisteme kayıtlı hiç kimse yok!")
+		EPrint("There is nobody registered to the system!")
 		return
 	}
 	for index, person := range listOfPeople {
@@ -144,7 +144,7 @@ func listPeopleWith(key string) {
 		case "balance":
 			LPrint("#", index, " - ", person.Name, " (₺", person.Balance, ")")
 		case "transaction":
-			LPrint("#", index, " - ", person.Name, " (", len(person.Transactions), " işlem)")
+			LPrint("#", index, " - ", person.Name, " (", len(person.Transactions), " transactions)")
 		default:
 			LPrint("#", index, " - ", person.Name, " (", key, ")")
 		}
@@ -161,7 +161,7 @@ func personSelector() (*Person, bool) {
 	}
 
 	listPeopleWith("balance")
-	personIndex := GetChoice("Kişi Seçin")
+	personIndex := GetChoice("Choose a User")
 	somethingHasFound := false
 	var foundPerson *Person
 	for index := range listOfPeople {
@@ -185,7 +185,7 @@ func personSelectorToRemove() (int, bool) {
 	}
 
 	listPeopleWith("balance")
-	personIndex := GetChoice("Silmek için Kişi Seçin")
+	personIndex := GetChoice("Choose a User to Remove")
 	somethingHasFound := false
 	var foundPersonIndex int
 	for index := range listOfPeople {
@@ -201,81 +201,81 @@ func personSelectorToRemove() (int, bool) {
 
 func AddDebt() {
 	if len(listOfPeople) == 0 {
-		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		EPrint("There is no user in the system, please add one to continue...")
 		return
 	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
-		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		EPrint("User not found!")
 		return
 	}
 
-	FLPrint("\n##'%v' Kişisine Borç Kaydı Ekle", foundPerson.Name)
+	FLPrint("\n## Add Debt to User '%v'", foundPerson.Name)
 
-	amount, err := GetFloat("Borç Tutarı")
+	amount, err := GetFloat("Debt Amount")
 
 	if err != nil {
-		EPrint(err.Error() + " İşlem iptal ediliyor.")
+		EPrint(err.Error() + " Cancelling...")
 		return
 	}
 
-	desciption := GetString("Borç Açıklaması")
+	desciption := GetString("Debt Description")
 
 	foundPerson.NewTransaction(amount, desciption, true)
 	isSaved := Save(listOfPeople)
 
 	if !isSaved {
-		EPrint("Kayıt hatası!")
+		EPrint("Saving Error!")
 		return
 	}
 
-	LPrint("++ Borç kaydı başarıyla eklendi.")
+	LPrint("++ Debt record has been added.")
 }
 
 func AddPayment() {
 	if len(listOfPeople) == 0 {
-		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		EPrint("There is no user in the system, please add one to continue...")
 		return
 	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
-		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		EPrint("User not found!")
 		return
 	}
 
-	FLPrint("\n##'%v' Kişisine Ödeme Kaydı Ekle", foundPerson.Name)
+	FLPrint("\n## Add Payment to User '%v'", foundPerson.Name)
 
-	amount, err := GetFloat("Ödeme Tutarı")
+	amount, err := GetFloat("Payment Amount")
 
 	if err != nil {
-		EPrint(err.Error() + " İşlem iptal ediliyor.")
+		EPrint(err.Error() + " Cancelling...")
 		return
 	}
 
-	desciption := GetString("Ödeme Açıklaması")
+	desciption := GetString("Payment Description")
 
 	foundPerson.NewTransaction(amount, desciption, false)
 	isSaved := Save(listOfPeople)
 
 	if !isSaved {
-		EPrint("Kayıt hatası!")
+		EPrint("Saving Error!")
 		return
 	}
 
-	LPrint("++ Ödeme kaydı başarıyla eklendi.")
+	LPrint("++ Payment record has been added.")
 }
 
 func ListPeople() {
 	if len(listOfPeople) == 0 {
-		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		EPrint("There is no user in the system, please add one to continue...")
 		return
 	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
-		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		EPrint("User not found!")
 		return
 	}
 
@@ -285,61 +285,61 @@ func ListPeople() {
 
 func ViewPersonDetails(p Person) {
 	LPrint()
-	FLPrint("Kişi: %v", p.Name)
-	FLPrint("Telefon: %v", p.Phone)
+	FLPrint("User: %v", p.Name)
+	FLPrint("Phone: %v", p.Phone)
 	LPrint("------------------------")
-	LPrint("İşlemler:")
+	LPrint("Transactions:")
 	p.Transactions.ListTransactions()
 	LPrint("------------------------")
-	FLPrint("Bakiye: %.2f", p.Balance)
+	FLPrint("Balance: %.2f", p.Balance)
 	Enter2Continue()
 }
 
 func AddPerson() {
-	LPrint("Kişi eklemek için sırasıyla isim ve telefon numarası girin")
-	name := GetString("İsim")
+	LPrint("Please enter user details to add a new user")
+	name := GetString("Name")
 
 	if name == "" {
-		EPrint("İsim boş geçilemez, işlem iptal edildi...")
+		EPrint("Cannot leave the name blank, cancelling...")
 		return
 	}
 
-	phone := GetString("Telefon")
+	phone := GetString("Phone")
 
 	listOfPeople.NewPerson(name, phone)
 	isSaved := Save(listOfPeople)
 
 	if !isSaved {
-		EPrint("Kayıt hatası!")
+		EPrint("Saving Error!")
 		return
 	}
 
-	LPrint("++Kişi başarıyla eklendi!")
+	LPrint("++ New user has been added.")
 	Enter2Continue()
 }
 
 func EditPerson() {
 	if len(listOfPeople) == 0 {
-		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		EPrint("There is no user in the system, please add one to continue...")
 		return
 	}
 	foundPerson, somethingHasFound := personSelector()
 
 	if !somethingHasFound {
-		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		EPrint("User not found!")
 		return
 	}
 
-	FLPrint("\n##'%v' Kişisini Düzenle", foundPerson.Name)
+	FLPrint("\n## Edit the User '%v'", foundPerson.Name)
 
-	name := GetString("Yeni İsim")
+	name := GetString("New Name")
 
 	if name == "" {
-		EPrint("İsim alanı boş geçilemez, işlem iptal edildi...")
+		EPrint("Cannot leave the name blank, cancelling...")
 		return
 	}
 
-	phone := GetString("Yeni Telefon")
+	phone := GetString("New Phone")
 
 	foundPerson.Name = name
 	if phone != "" {
@@ -348,42 +348,42 @@ func EditPerson() {
 	isSaved := Save(listOfPeople)
 
 	if !isSaved {
-		EPrint("Kayıt hatası!")
+		EPrint("Saving Error!")
 		return
 	}
 
-	LPrint("++ Kişi başarıyla güncellendi!")
+	LPrint("++ The user has been updated.")
 	Enter2Continue()
 }
 
 func RemovePerson() {
 	if len(listOfPeople) == 0 {
-		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		EPrint("There is no user in the system, please add one to continue...")
 		return
 	}
 	foundPersonIndex, somethingHasFound := personSelectorToRemove()
 
 	if !somethingHasFound {
-		EPrint("Seçtiğiniz kullanıcı bulunamadı!")
+		EPrint("User not found!")
 		return
 	}
 
-	FLPrint("\n++'%v' Kişisi Silinecek!!!", listOfPeople[foundPersonIndex].Name)
+	FLPrint("\n++ The User Will Be Removed '%v'!!!", listOfPeople[foundPersonIndex].Name)
 
-	decision := strings.ToLower(GetString("Silme İşleminden Emin Misiniz? (Evet / Hayır)"))
+	decision := strings.ToLower(GetString("Are you sure? (Yes / No)"))
 
-	if decision == "e" || decision == "evet" {
+	if decision == "e" || decision == "evet" || decision == "yes" || decision == "y" {
 		listOfPeople = removePersonFromList(listOfPeople, foundPersonIndex)
 		isSaved := Save(listOfPeople)
 
 		if !isSaved {
-			EPrint("Kayıt hatası!")
+			EPrint("Saving Error!")
 			return
 		}
 
-		FLPrint("++ '%v' başarıyla silindi...", listOfPeople[foundPersonIndex].Name)
+		FLPrint("++ The user '%v' has been removed...", listOfPeople[foundPersonIndex].Name)
 	} else {
-		LPrint("** İşlem iptal edildi...")
+		LPrint("** Cancelled...")
 	}
 	Enter2Continue()
 }
@@ -400,23 +400,23 @@ func removePersonFromList(_listOfPeople People, pos int) People {
 
 func SeeReport() {
 	if len(listOfPeople) == 0 {
-		EPrint("Sistemde hiç kişi yok! Lütfen yeni bir kişi ekleyin.")
+		EPrint("There is no user in the system, please add one to continue...")
 		return
 	}
-	LPrint("1- Borç Raporu")
-	LPrint("2- İşlem Raporu")
-	choice := GetChoice("Rapor Tipi Seçin")
+	LPrint("1- Balance Report")
+	LPrint("2- Transaction Report")
+	choice := GetChoice("Please Choose the Report Type")
 	switch choice {
 	case 1:
-		LPrint("## Borçlara Göre Rapor")
+		LPrint("## Report by Balance")
 		listPeopleWith("balance")
 		Enter2Continue()
 	case 2:
-		LPrint("## İşlem Sayısına Göre Rapor")
+		LPrint("## Report by Transaction Count")
 		listPeopleWith("transaction")
 		Enter2Continue()
 	default:
-		EPrint("Seçtiğiniz rapor bulunamadı...")
+		EPrint("There is no such report...")
 	}
 }
 
@@ -461,7 +461,7 @@ func GetFloat(prompt string) (value float64, err error) {
 	fmt.Scanln(&value)
 
 	if value <= 0 {
-		return 0, errors.New(prompt + " değeri 0 veya negatif olamaz.")
+		return 0, errors.New(prompt + " amount cannot be 0 or negative.")
 	}
 
 	return value, nil
@@ -471,7 +471,7 @@ func GetString(prompt string) string {
 	FPrint("%v: ", prompt)
 	value, err := reader.ReadString('\n')
 	if err != nil {
-		EPrint(prompt + " Alınamadı! Hata: " + err.Error())
+		EPrint(prompt + " couldn't get! Error: " + err.Error())
 		return ""
 	}
 
@@ -484,27 +484,27 @@ func GetString(prompt string) string {
 func Enter2Continue() {
 	LPrint()
 	LPrint()
-	LPrint("Devam etmek için enter tuşuna basın...")
+	LPrint("Please enter to continue...")
 	fmt.Scanln()
 }
 
 func Save(p People) bool {
 	if len(p) == 0 {
-		EPrint("Kayıt edilecek hiçbir şey yok!")
+		EPrint("Nothing to save!")
 		return false
 	}
 
 	jsonContent, err := json.Marshal(p)
 
 	if err != nil {
-		EPrint("Değişiklikler diske yazılamadı! JSON Hatası: " + err.Error())
+		EPrint("Couldn't save to the disk! JSON Error: " + err.Error())
 		return false
 	}
 
 	err = os.WriteFile(SaveLocation, jsonContent, 0644)
 
 	if err != nil {
-		EPrint("Değişiklikler diske yazılamadı! Kayıt Hatası: " + err.Error())
+		EPrint("Couldn't save to the disk! Write Error: " + err.Error())
 		return false
 	}
 
@@ -515,15 +515,15 @@ func Load() People {
 	jsonContent, err := os.ReadFile(SaveLocation)
 
 	if err != nil {
-		EPrint("Kayıt dosyası bulunamadı. Sıfırdan başlanacak")
+		EPrint("No save file found. Making a fresh start...")
 		return People{}
 	}
 	var _listOfPeople People
 	err = json.Unmarshal(jsonContent, &_listOfPeople)
 
 	if err != nil {
-		EPrint("Kayıt dosyasında bir hata var. Sistem çalışmayı sonlandıracak.")
-		panic("Lütfen '" + SaveLocation + "' dosyasını silip programı yeniden çalıştırın.")
+		EPrint("Corrupt save file. The program will stop. Please backup your file '" + SaveLocation + "' and remove it in order to continue.")
+		panic("Terminating...")
 	}
 
 	return _listOfPeople
